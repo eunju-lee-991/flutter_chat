@@ -33,3 +33,15 @@ const KTextFieldDecoration = InputDecoration(
     borderRadius: BorderRadius.all(Radius.circular(32.0)),
   ),
 );
+
+const KSentMessageBorderRadius = BorderRadius.only(
+  topLeft: Radius.circular(30.0),
+  bottomLeft: Radius.circular(30.0),
+  bottomRight: Radius.circular(30.0),
+);
+
+const KReceivedMessageBorderRadius = BorderRadius.only(
+  topRight: Radius.circular(30.0),
+  bottomLeft: Radius.circular(30.0),
+  bottomRight: Radius.circular(30.0),
+);

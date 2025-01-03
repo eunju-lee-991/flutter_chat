@@ -1,7 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:sbsbsb/components/message_bubble.dart';
 import 'package:sbsbsb/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+final _firestore = FirebaseFirestore.instance;
+final _auth = FirebaseAuth.instance;
+User? loggedInUser;
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat';
@@ -12,9 +17,6 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
-  User? loggedInUser;
   String? messageText;
 
   @override
@@ -35,19 +37,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void getMessages() async {
-    // var querySnapshot = await _firestore.collection('messages').get();
-    // for (var msg in querySnapshot.docs) {
-    //   print(msg.get('text'));
-    // }
-
-    await for (var snapshot in _firestore.collection('messages').snapshots()) {
-      for (var message in snapshot.docs) {
-        print(message.data());
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,12 +47,8 @@ class _ChatScreenState extends State<ChatScreen> {
               icon: Icon(Icons.close),
               onPressed: () async {
                 loggedInUser = _auth.currentUser;
-                if (loggedInUser != null) {
-                  print('goodbyeeeeeeeee $loggedInUser');
-                }
+                if (loggedInUser != null) {}
                 await _auth.signOut();
-
-                print('goodbyeeeeeeeee??? ${_auth.currentUser}');
                 Navigator.pop(context);
               }),
         ],
@@ -75,6 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            getStreamBuilder(),
             Container(
               decoration: kMessageContainerDecoration,
               child: Row(
@@ -112,4 +98,36 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+}
+
+Widget getStreamBuilder() {
+  return StreamBuilder<QuerySnapshot>(
+    stream: _firestore.collection('messages').snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        final messages = snapshot.data?.docs.reversed;
+        return Expanded(
+          child: ListView(
+            reverse: true, // 맨 마지막에 스크롤 고정
+            children: messages?.map((msg) {
+                  final data = msg.data() as Map<String, dynamic>;
+                  return MessageBubble(
+                    text: data['text'] ?? '',
+                    sender: data['sender'] ?? '',
+                    isSender: (data['sender'] != null &&
+                        data['sender'] == loggedInUser?.email),
+                  );
+                }).toList() ??
+                [],
+          ),
+        );
+      } else {
+        return Center(
+          child: CircularProgressIndicator(
+            backgroundColor: Colors.yellowAccent,
+          ),
+        );
+      }
+    },
+  );
 }

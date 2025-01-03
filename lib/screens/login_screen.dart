@@ -13,10 +13,20 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  late TextEditingController _controller;
   final _auth = FirebaseAuth.instance;
+  String initialEmail = 'aaa@gmail.com';
   String? email;
   String? password;
   bool showSpinner = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    email = initialEmail;
+    _controller = new TextEditingController(text: initialEmail);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 48.0,
               ),
               TextField(
+                  controller: _controller,
                   keyboardType: TextInputType.emailAddress,
                   onChanged: (value) {
                     email = value;
@@ -77,13 +88,22 @@ class _LoginScreenState extends State<LoginScreen> {
                               email: email!, password: password!);
                       if (userCredential != null) {
                         Navigator.pushNamed(context, ChatScreen.id);
+                        setState(() {
+                          showSpinner = false;
+                        });
+                      }else {
+
+                        setState(() {
+                          showSpinner = false;
+                        });
                       }
-                      setState(() {
-                        showSpinner = false;
-                      });
                     } catch (e) {
                       print('예외 발생!');
                       print(e);
+
+                      setState(() {
+                        showSpinner = false;
+                      });
                     }
                   }
                 },
